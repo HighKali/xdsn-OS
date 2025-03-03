@@ -1,6 +1,6 @@
-    processor 6502
-    include "vcs.h"       ; Definizioni TIA (VSYNC, WSYNC, ecc.)
-    org $F000             ; Inizio ROM (4 KB)
+processor 6502
+include "vcs.h"       ; Definizioni TIA (VSYNC, WSYNC, ecc.)
+org $F000             ; Inizio ROM (4 KB)
 
 ; Costanti
 KALI_HEIGHT = 16          ; Altezza sprite Kali
