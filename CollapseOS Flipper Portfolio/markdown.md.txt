@@ -1,0 +1,21 @@
+# CollapseOS-Flipper-Portfolio
+**Un calcolatore di pin in stile Atari Portfolio per Collapse OS su ARM con integrazione Flipper Zero**
+
+## Descrizione
+Un software minimalista ispirato all’Atari Portfolio, progettato per Collapse OS su microcontrollori ARM. Permette di calcolare operazioni base (es. somme) e configurare pin GPIO, con la possibilità di inviare comandi al Flipper Zero tramite UART/USB CDC.
+
+## Funzionalità
+- **Calcolatore:** Esegue somme (es. "CALC 3 4 +").
+- **Gestione pin:** Configura GPIO (es. "PIN 5 ON").
+- **Integrazione Flipper Zero:** Invia comandi per controllare i pin del Flipper.
+
+## Requisiti
+- **Hardware:** Microcontrollore ARM (es. STM32F103), Flipper Zero.
+- **Toolchain:** `arm-none-eabi-gcc`, `st-flash`.
+- **Collapse OS:** Fork con supporto ARM (branch `arm-support`).
+
+## Installazione
+1. Clona il repository:
+   ```bash
+   git clone https://github.com/tuo-username/CollapseOS-Flipper-Portfolio.git
+   cd CollapseOS-Flipper-Portfolio
