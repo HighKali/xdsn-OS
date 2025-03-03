@@ -1,0 +1,121 @@
+.section .text
+.global _start
+.syntax unified
+.thumb
+
+.equ USART2_BASE, 0x40004400  ; USART2 per comunicazione seriale (STM32)
+.equ GPIOA_BASE,  0x40010800  ; GPIOA per pin (STM32)
+.equ RAM_BASE,    0x20000000  ; Buffer RAM per comandi/immagini
+.equ MAX_SIZE,    4096        ; Dimensione massima immagine (4 KB)
+.equ BAUD_9600,   0x00002710  ; Baud rate 9600 per clock 72 MHz
+
+_start:
+    bl init_usart         ; Inizializza UART
+    bl init_gpio          ; Inizializza GPIO
+    bl send_prompt        ; Mostra prompt iniziale
+    bl main_loop          ; Loop principale
+    b .                   ; Loop infinito (fallback)
+
+init_usart:
+    ldr r0, =USART2_BASE
+    ldr r1, =0x0000000C   ; Abilita TX/RX
+    str r1, [r0, #0x00]   ; USART_CR1
+    ldr r1, =BAUD_9600    ; Imposta baud rate
+    str r1, [r0, #0x0C]   ; USART_BRR
+    bx lr
+
+init_gpio:
+    ldr r0, =GPIOA_BASE
+    ldr r1, =0x44444444   ; Configura PA0-PA7 come output (adatta se necessario)
+    str r1, [r0, #0x00]   ; GPIO_CRL
+    bx lr
+
+send_prompt:
+    ldr r0, =USART2_BASE
+    ldr r1, =prompt_text
+prompt_loop:
+    ldrb r2, [r1], #1     ; Carica byte del prompt
+    cmp r2, #0            ; Fine stringa?
+    beq prompt_done
+    bl uart_send          ; Invia byte
+    b prompt_loop
+prompt_done:
+    bx lr
+
+main_loop:
+    bl read_command       ; Leggi comando dall’utente
+    bl parse_command      ; Interpreta il comando
+    bl execute_command    ; Esegui il comando
+    bl send_prompt        ; Mostra prompt dopo ogni comando
+    b main_loop
+
+read_command:
+    ldr r0, =USART2_BASE
+    ldr r1, =RAM_BASE     ; Buffer per il comando
+    mov r2, #16           ; Lunghezza massima comando
+read_loop:
+    ldr r3, [r0, #0x1C]   ; Leggi stato USART (ISR)
+    tst r3, #0x20         ; RXNE (dati ricevuti)?
+    beq read_loop
+    ldrb r3, [r0, #0x28]  ; Leggi byte da USART_TDR
+    strb r3, [r1], #1     ; Salva nel buffer
+    cmp r3, #0x0D         ; Carattere ritorno (CR)?
+    beq read_done
+    subs r2, r2, #1       ; Decrementa contatore
+    bne read_loop
+read_done:
+    mov r3, #0
+    strb r3, [r1, #-1]    ; Termina stringa con null
+    bx lr
+
+parse_command:
+    ldr r1, =RAM_BASE
+    ldrb r2, [r1]         ; Primo carattere del comando
+    cmp r2, #'P'          ; "PIN" comando?
+    beq parse_pin
+    cmp r2, #'L'          ; "LIVE" per autorun immagine?
+    beq parse_live
+    b error
+
+parse_pin:
+    add r1, r1, #4        ; Salta "PIN "
+    ldrb r2, [r1]         ; Numero pin (es. '5')
+    sub r2, r2, #'0'      ; Converti in numero (0-9)
+    add r1, r1, #2        ; Salta spazio
+    ldrb r3, [r1]         ; Primo carattere dell’azione
+    cmp r3, #'O'          ; "ON"?
+    beq set_pin_on
+    cmp r3, #'R'          ; "READ"?
+    beq read_pin
+    b error
+set_pin_on:
+    mov r4, #1            ; Stato HIGH
+    b execute_pin
+read_pin:
+    mov r4, #2            ; Segnale per lettura
+    b execute_pin
+
+parse_live:
+    b receive_image       ; Vai direttamente a ricevere immagine
+
+execute_command:
+    ldr r1, =RAM_BASE
+    ldrb r2, [r1]
+    cmp r2, #'P'
+    beq execute_pin
+    cmp r2, #'L'
+    beq run_image         ; Esegue immagine dopo "LIVE"
+    b error
+
+execute_pin:
+    ldr r0, =GPIOA_BASE
+    mov r3, #1
+    lsl r3, r3, r2        ; Maschera per il pin (es. 1 << 5 per PA5)
+    cmp r4, #1            ; ON?
+    beq pin_on
+    cmp r4, #2            ; READ?
+    beq pin_read
+    str r3, [r0, #0x14]   ; GPIO_BRR (reset pin, OFF)
+    b send_ok
+pin_on:
+    str r3, [r0, #0x10]   ; GPIO_BSRR (set pin,...
