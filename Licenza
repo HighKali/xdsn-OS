@@ -1,0 +1,28 @@
+
+---
+
+### **Istruzioni per GitHub**
+
+1. **Crea un nuovo repository**:
+   - Vai su GitHub, accedi al tuo account.
+   - Clicca su "New repository".
+   - Dai un nome al repository (es. `blockchain-project`), scegli la visibilità (pubblica o privata), e crea il repository.
+
+2. **Aggiungi i file**:
+   - Clicca su "Add file" -> "Create new file".
+   - Incolla il contenuto di `blockchain.asm` nel file `blockchain.asm`.
+   - Ripeti per `payment_gateway.py` e `README.md`.
+   - Committa i file con un messaggio (es. "Initial commit").
+
+3. **Testa il codice**:
+   - Clona il repository sul tuo computer.
+   - Segui le istruzioni nel README per compilare ed eseguire.
+
+---
+
+### **Considerazioni finali**
+Questo codice è un proof-of-concept completo che puoi copiare e incollare su GitHub. Tuttavia, per un progetto reale, ti consiglio di:
+- Sostituire le funzioni crittografiche simulate con librerie reali.
+- Implementare una gestione della memoria non volatile per salvare i dati su Flipper Zero o Collapse OS.
+- Espandere il networking per la sincronizzazione online.
+- Adattare l'integrazione con `inferiOS` se hai accesso al repository reale.
